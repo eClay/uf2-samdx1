@@ -8,6 +8,9 @@
 #ifdef SAMD51
 #define BOOTLOADER_K 16
 #endif
+#ifdef SAMR30
+#define BOOTLOADER_K 16
+#endif
 
 extern const uint8_t bootloader[];
 extern const uint16_t bootloader_crcs[];
@@ -33,6 +36,16 @@ uint8_t pageBuf[FLASH_ROW_SIZE];
         while (NVMCTRL->STATUS.bit.READY == 0) {}                              \
     } while (0)
 #endif
+#ifdef SAMR30
+#define NVM_FUSE_ADDR NVMCTRL_AUX0_ADDRESS
+#define exec_cmd(cmd)                                                          \
+    do {                                                                       \
+        NVMCTRL->STATUS.reg |= NVMCTRL_STATUS_MASK;                            \
+        NVMCTRL->ADDR.reg = (uint32_t)NVMCTRL_USER / 2;                        \
+        NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMDEX_KEY | cmd;                    \
+        while (NVMCTRL->INTFLAG.bit.READY == 0) {}                             \
+    } while (0)
+#endif
 
 void setBootProt(int v) {
     uint32_t fuses[2];
@@ -42,6 +55,9 @@ void setBootProt(int v) {
     #endif
     #ifdef SAMD51
     while (NVMCTRL->STATUS.bit.READY == 0) {}
+    #endif
+    #ifdef SAMR30
+    while (!(NVMCTRL->INTFLAG.reg & NVMCTRL_INTFLAG_READY)) {}
     #endif
 
     fuses[0] = *((uint32_t *)NVM_FUSE_ADDR);
@@ -63,6 +79,10 @@ void setBootProt(int v) {
         #ifdef SAMD51
         fuses[0] = 0xF69A9239;
         fuses[1] = 0xAEECFF80;
+        #endif
+        #ifdef SAMR30
+        fuses[0] = 0xD8E0C7FA;
+        fuses[1] = 0xFFFFFC5D;
         #endif
     }
 
@@ -93,6 +113,12 @@ void setBootProt(int v) {
     exec_cmd(NVMCTRL_CTRLB_CMD_EP);
     exec_cmd(NVMCTRL_CTRLB_CMD_PBC);
     #endif
+    #ifdef SAMR30
+    NVMCTRL->CTRLB.reg = NVMCTRL->CTRLB.reg | NVMCTRL_CTRLB_CACHEDIS | NVMCTRL_CTRLB_MANW;
+
+    exec_cmd(NVMCTRL_CTRLA_CMD_EAR);
+    exec_cmd(NVMCTRL_CTRLA_CMD_PBC);
+    #endif
 
     *((uint32_t *)NVM_FUSE_ADDR) = fuses[0];
     *(((uint32_t *)NVM_FUSE_ADDR) + 1) = fuses[1];
@@ -102,6 +128,9 @@ void setBootProt(int v) {
     #endif
     #ifdef SAMD51
     exec_cmd(NVMCTRL_CTRLB_CMD_WQW);
+    #endif
+    #ifdef SAMR30
+    exec_cmd(NVMCTRL_CTRLA_CMD_WAP);
     #endif
 
     resetIntoApp();
@@ -136,6 +165,10 @@ int main(void) {
     exec_cmd(NVMCTRL_CTRLB_CMD_SBPDIS);
     NVMCTRL->CTRLA.bit.CACHEDIS0 = true;
     NVMCTRL->CTRLA.bit.CACHEDIS1 = true;
+    #endif
+    #ifdef SAMR30
+    // Disable BOOTPROT while updating bootloader.
+    setBootProt(7); // 0k - See "Table 22-2 Boot Loader Size" in datasheet.
     #endif
 
     const uint8_t *ptr = bootloader;
@@ -183,6 +216,10 @@ int main(void) {
     #endif
     // For the SAMD51, the boot protection will automatically be re-enabled on
     // reset.
+    #ifdef SAMR30
+    // Re-enable BOOTPROT
+    setBootProt(1); // 16k
+    #endif
 
     resetIntoBootloader();
 

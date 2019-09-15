@@ -1,5 +1,6 @@
 build/
 .vs/
+.vscode/ipch/
 uf2-bootloader.elf
 tmp
 *.sw?

@@ -60,26 +60,26 @@ void usart_open() {
     uint8_t pin;
 
     /* Configure the port pins for SERCOM_USART */
-    if (BOOT_USART_PAD0 != PINMUX_UNUSED) {
-        /* Mask 6th bit in pin number to check whether it is greater than 32
-         * i.e., PORTB pin */
-        port = (BOOT_USART_PAD0 & 0x200000) >> 21;
-        pin = BOOT_USART_PAD0 >> 16;
-        PORT->Group[port].PINCFG[(pin - (port * 32))].bit.PMUXEN = 1;
-        PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg &= ~(0xF << (4 * (pin & 0x01u)));
-        PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg |= (BOOT_USART_PAD0 & 0xFF)
-                                                               << (4 * (pin & 0x01u));
-    }
-    if (BOOT_USART_PAD1 != PINMUX_UNUSED) {
-        /* Mask 6th bit in pin number to check whether it is greater than 32
-         * i.e., PORTB pin */
-        port = (BOOT_USART_PAD1 & 0x200000) >> 21;
-        pin = BOOT_USART_PAD1 >> 16;
-        PORT->Group[port].PINCFG[(pin - (port * 32))].bit.PMUXEN = 1;
-        PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg &= ~(0xF << (4 * (pin & 0x01u)));
-        PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg |= (BOOT_USART_PAD1 & 0xFF)
-                                                               << (4 * (pin & 0x01u));
-    }
+    // if (BOOT_USART_PAD0 != PINMUX_UNUSED) {
+    //     /* Mask 6th bit in pin number to check whether it is greater than 32
+    //      * i.e., PORTB pin */
+    //     port = (BOOT_USART_PAD0 & 0x200000) >> 21;
+    //     pin = BOOT_USART_PAD0 >> 16;
+    //     PORT->Group[port].PINCFG[(pin - (port * 32))].bit.PMUXEN = 1;
+    //     PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg &= ~(0xF << (4 * (pin & 0x01u)));
+    //     PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg |= (BOOT_USART_PAD0 & 0xFF)
+    //                                                            << (4 * (pin & 0x01u));
+    // }
+    // if (BOOT_USART_PAD1 != PINMUX_UNUSED) {
+    //     /* Mask 6th bit in pin number to check whether it is greater than 32
+    //      * i.e., PORTB pin */
+    //     port = (BOOT_USART_PAD1 & 0x200000) >> 21;
+    //     pin = BOOT_USART_PAD1 >> 16;
+    //     PORT->Group[port].PINCFG[(pin - (port * 32))].bit.PMUXEN = 1;
+    //     PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg &= ~(0xF << (4 * (pin & 0x01u)));
+    //     PORT->Group[port].PMUX[(pin - (port * 32)) / 2].reg |= (BOOT_USART_PAD1 & 0xFF)
+    //                                                            << (4 * (pin & 0x01u));
+    // }
     if (BOOT_USART_PAD2 != PINMUX_UNUSED) {
         /* Mask 6th bit in pin number to check whether it is greater than 32
          * i.e., PORTB pin */
@@ -122,6 +122,22 @@ void usart_open() {
     GCLK->PCHCTRL[BOOT_GCLK_ID_SLOW].reg = GCLK_PCHCTRL_GEN_GCLK3_Val | (1 << GCLK_PCHCTRL_CHEN_Pos);
 
     MCLK->BOOT_USART_MASK.reg |= BOOT_USART_BUS_CLOCK_INDEX ;
+    #endif
+
+    #ifdef SAMR30
+    // uint32_t inst = uart_get_sercom_index(BOOT_USART_MODULE);
+    // /* Enable clock for BOOT_USART_MODULE */
+    // PM->APBCMASK.reg |= (1u << (inst + PM_APBCMASK_SERCOM0_Pos));
+
+    // /* Set GCLK_GEN0 as source for GCLK_ID_SERCOMx_CORE */
+    // GCLK_CLKCTRL_Type clkctrl = {0};
+    // uint16_t temp;
+    // GCLK->CLKCTRL.bit.ID = inst + GCLK_ID_SERCOM0_CORE;
+    // temp = GCLK->CLKCTRL.reg;
+    // clkctrl.bit.CLKEN = true;
+    // clkctrl.bit.WRTLOCK = false;
+    // clkctrl.bit.GEN = GCLK_CLKCTRL_GEN_GCLK0_Val;
+    // GCLK->CLKCTRL.reg = (clkctrl.reg | temp);
     #endif
 
     /* Baud rate 115200 - clock 8MHz -> BAUD value-50436 */

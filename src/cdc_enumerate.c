@@ -388,6 +388,10 @@ static void load_serial_number(char serial_number[SERIAL_NUMBER_LENGTH]) {
     uint32_t* addresses[4] = {(uint32_t *) 0x008061FC, (uint32_t *) 0x00806010,
                               (uint32_t *) 0x00806014, (uint32_t *) 0x00806018};
     #endif
+    #ifdef SAMR30
+    uint32_t* addresses[4] = {(uint32_t *) 0x0080A00C, (uint32_t *) 0x0080A00C,
+                              (uint32_t *) 0x0080A044, (uint32_t *) 0x0080A048};
+    #endif
     uint32_t serial_number_idx = 0;
     for (int i = 0; i < 4; i++) {
         serial_number_idx += writeNum(&(serial_number[serial_number_idx]), *(addresses[i]), true);
@@ -474,6 +478,12 @@ void AT91F_InitUSB(void) {
     #define DP_PIN PIN_PA25H_USB_DP
     #define DP_MUX MUX_PA25H_USB_DP
     #endif
+    #ifdef SAMR30
+    #define DM_PIN PIN_PA24G_USB_DM
+    #define DM_MUX MUX_PA24G_USB_DM
+    #define DP_PIN PIN_PA25G_USB_DP
+    #define DP_MUX MUX_PA25G_USB_DP
+    #endif
 
     /* Set up the USB DP/DN pins */
     PORT->Group[0].PINCFG[DM_PIN].bit.PMUXEN = 1;
@@ -492,6 +502,13 @@ void AT91F_InitUSB(void) {
     MCLK->AHBMASK.bit.USB_ = true;
     MCLK->APBBMASK.bit.USB_ = true;
 
+    while(GCLK->SYNCBUSY.bit.GENCTRL0) {}
+    #endif
+    #ifdef SAMR30
+    GCLK->PCHCTRL[USB_GCLK_ID].reg = GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos);
+    MCLK->AHBMASK.bit.USB_ = true;
+    MCLK->APBBMASK.bit.USB_ = true;
+    
     while(GCLK->SYNCBUSY.bit.GENCTRL0) {}
     #endif
 

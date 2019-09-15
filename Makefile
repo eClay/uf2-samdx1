@@ -8,6 +8,9 @@ endif
 ifeq ($(CHIP_FAMILY), samd51)
 COMMON_FLAGS = -mthumb -mcpu=cortex-m4 -O2 -g -DSAMD51
 endif
+ifeq ($(CHIP_FAMILY), samr30)
+COMMON_FLAGS = -mthumb -mcpu=cortex-m0plus -O2 -g -DSAMR30
+endif
 WFLAGS = \
 -Werror -Wall -Wstrict-prototypes \
 -Werror-implicit-function-declaration -Wpointer-arith -std=gnu99 \
@@ -40,6 +43,12 @@ BOOTLOADER_SIZE=16384
 SELF_LINKER_SCRIPT=scripts/samd51j19a_self.ld
 endif
 
+ifeq ($(CHIP_FAMILY), samr30)
+LINKER_SCRIPT=scripts/samr30g18a.ld
+BOOTLOADER_SIZE=16384
+SELF_LINKER_SCRIPT=scripts/samr30g18a_self.ld
+endif
+
 LDFLAGS= $(COMMON_FLAGS) \
 -Wall -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common \
 -Wl,--warn-section-align \
@@ -61,6 +70,10 @@ INCLUDES += -Ilib/same54/include/
 else
 INCLUDES += -Ilib/samd51/include/
 endif
+endif
+
+ifeq ($(CHIP_FAMILY), samr30)
+INCLUDES += -Ilib/samr30/include/
 endif
 
 COMMON_SRC = \

@@ -13,6 +13,10 @@ void delay(uint32_t ms) {
 #ifdef SAMD51
     ms <<= 12;
 #endif
+// SAMR30 starts up at 4mhz by default.
+#ifdef SAMR30
+    ms <<= 10;
+#endif
     for (int i = 1; i < ms; ++i) {
         asm("nop");
     }
