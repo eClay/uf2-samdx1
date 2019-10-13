@@ -46,11 +46,19 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 SEARCH_DIR(.)
 
+__BOOT_BASE    	   = 0x00000000;
+__BOOT_LENGTH      = 0x00002000;
+__BINFO_LENGTH     = 0x00000010;
+__APP_BASE         = 0x00002000;
+
+__RAM_BASE         = 0x20000000;
+__RAM_LENGTH       = 0x00008000;
+
 /* Memory Spaces Definitions */
 MEMORY
 {
-  rom      (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00002000
-  ram      (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00008000
+  rom      (rx)  : ORIGIN = __BOOT_BASE , LENGTH = __BOOT_LENGTH
+  ram      (rwx) : ORIGIN = __RAM_BASE  , LENGTH = __RAM_LENGTH
 }
 
 /* The stack size used by the application. NOTE: you need to adjust according to your application. */
@@ -158,7 +166,7 @@ SECTIONS
     . = ALIGN(4);
     _end = . ;
 
-    _binfo_start = 0x00002000 - 4 * 4;
+    _binfo_start = __BOOT_BASE + __BOOT_LENGTH - __BINFO_LENGTH;
     .binfo _binfo_start : {
       KEEP(*(.binfo)) ;
     } > rom
